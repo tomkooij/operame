@@ -83,6 +83,10 @@ bool            rest_enabled;
 // S1 toggles display on/off
 bool            display_enabled = true;
 
+double round2(double value) {
+  return (int)(value * 100 + 0.5) / 100.0;
+}
+
 void retain(const String& topic, const String& message) {
     Serial.printf("%s %s\n", topic.c_str(), message.c_str());
     mqtt.publish(topic, message, true, 0);
@@ -682,7 +686,7 @@ void loop() {
                 const size_t capacity = JSON_OBJECT_SIZE(3);
                 DynamicJsonDocument doc(capacity);
                 doc["variable"] = "temperature";
-                doc["value"] = t;
+                doc["value"] = round2(t);
                 doc["unit"] = "C";
                 serializeJson(doc, message);
                 retain(mqtt_topic_temperature, message);
@@ -694,7 +698,7 @@ void loop() {
                 const size_t capacity = JSON_OBJECT_SIZE(3);
                 DynamicJsonDocument doc(capacity);
                 doc["variable"] = "humidity";
-                doc["value"] = h;
+                doc["value"] = round2(h);
                 doc["unit"] = "%R.H.";
                 serializeJson(doc, message);
                 retain(mqtt_topic_humidity, message);
