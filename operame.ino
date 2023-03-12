@@ -80,6 +80,9 @@ String          rest_resource_id;
 String          rest_cert;
 bool            rest_enabled;
 
+// S1 toggles display on/off
+bool            display_enabled = true;
+
 void retain(const String& topic, const String& message) {
     Serial.printf("%s %s\n", topic.c_str(), message.c_str());
     mqtt.publish(topic, message, true, 0);
@@ -212,6 +215,28 @@ void calibrate() {
     delay(15000);  // give time to read long message
 }
 
+
+void toggle_display() {
+    if (display_enabled) {
+        display_big("Doei!");
+        Serial.println("Het scherm gaat uit");
+        delay(1000);
+        display.fillScreen(TFT_BLACK);
+        digitalWrite(pin_backlight, LOW);
+        display.writecommand(ST7789_DISPOFF);// Switch off the display
+        display.writecommand(ST7789_SLPIN);  // Sleep the display driver
+        display_enabled = false;
+    } else {
+        Serial.println("Het scherm gaat weer aan. (hoop ik)");
+        display.writecommand(ST7789_SLPOUT); // Wake-up the display driver
+        display.writecommand(ST7789_DISPON); // Switch on the display
+        digitalWrite(pin_backlight, HIGH);
+        display_big("Hoi!");
+        delay(1000);
+        display_enabled = true;
+    }
+}
+
 void ppm_demo() {
     display_big("demo!");
     delay(3000);
@@ -263,7 +288,7 @@ void check_portalbutton() {
 }
 
 void check_demobutton() {
-    if (button(pin_demobutton)) ppm_demo();
+    if (button(pin_demobutton)) toggle_display();
 }
 
 void check_buttons() {
@@ -593,6 +618,7 @@ void loop() {
     }
 
     every(50) {
+      if (display_enabled) {
         if (co2 < 0) {
             display_big(T.error_sensor, TFT_RED);
         } else if (co2 == 0) {
@@ -631,6 +657,7 @@ void loop() {
                 }
             }
         }
+      }
     }
 
     if (mqtt_enabled) {
